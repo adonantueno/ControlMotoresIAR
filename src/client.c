@@ -18,7 +18,7 @@
 
 #define PORT "3490" // the port client will be connecting to 
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+#define MAXBUFLEN 100 // max number of bytes we can get at once 
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -36,23 +36,24 @@ void *get_in_addr(struct sockaddr *sa)
 int main(int argc, char *argv[])
 {
 	uint16_t packetid;
+	char comando [CONTPACKETLEN] = "0x80";
 	int sockfd, numbytes;  
-	char buff[MAXDATASIZE];
+	char buff[MAXBUFLEN];
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
-	char mens_cli[MAXDATASIZE];
+	char mens_cli[MAXBUFLEN];
 	char mensaje [3] = {0xA};
     struct timeval t;
 
-/* DEFINICION DE PAQUETE PARA ENVIAR
+// DEFINICION DE PAQUETE PARA ENVIAR
 	packetid = 0x00;
-    t.tv_sec  = 1;
-    t.tv_usec = 0;
-	struct SAO_data_transport_payload payload;
+	
 
-	gettimeofday(&payload.timestamp, NULL);
-	strcpy(&payload.data,mensaje);
+  	//struct SAO_data_transport_payload payload;
+
+	//gettimeofday(&payload.timestamp, NULL);
+	//strcpy(&payload.data,mensaje);
 
 	struct SAO_data_transport sao_packet, sao_packet_net;
     sao_packet.syncword           = SYNCWORD;
@@ -63,17 +64,10 @@ int main(int argc, char *argv[])
     sao_packet.hdr.pdl            = sizeof(struct SAO_data_transport_payload);
 	
 	gettimeofday(sao_packet.payload.timestamp, NULL);
-	sao_packet.payload.data[0] = 0x41;
-    sao_packet.payload.data[1] = 0x52;
-
-	//strcpy(sao_packet.payload.data, mensaje);
-
-	//strcpy(sao_packet.payload.data, mensaje);
-	//memcpy(*sao_packet.payload.data,0XA0,sizeof(struct SAO_data_transport_payload));  
+	strcpy (sao_packet.payload.data, comando);
+    
     sao_packet.end                = END;
 
-
-*/
 	//printf("sao packet %s", sao_packet.syncword);
 
 	bzero(&buff, BUFFLEN);
@@ -132,12 +126,12 @@ int main(int argc, char *argv[])
 	strcpy(mens_cli, "Prueba");	
 
 	//if (send(sockfd, &sao_packet, MAXDATASIZE, 0) == -1) 
-	if (write(sockfd, mens_cli, MAXDATASIZE) == -1)
+	if (write(sockfd, &sao_packet, MAXBUFLEN) == -1)
 	{
 	    perror("send");
 	    exit(1);
 	} 
-	if ((numbytes = read(sockfd, buff,MAXDATASIZE)) == -1)
+	if ((numbytes = read(sockfd, buff,MAXBUFLEN)) == -1)
 	{//if ((numbytes = recv(sockfd, buff, MAXDATASIZE, 0)) == -1) {
 	    perror("recv");
 	    exit(1);

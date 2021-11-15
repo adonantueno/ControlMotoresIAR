@@ -10,7 +10,7 @@
 
 #define BUFFLEN          128
 #define ENCOPACKETLEN    40
-#define CONTPACKETLEN
+#define CONTPACKETLEN    2
 
 struct __attribute__((__packed__)) SAO_data_transport_header 
 {

@@ -157,14 +157,14 @@ int main(void)
 			printf("no son iguales");
 		}
 		
-/*
-		sao_packet_net = sao_packet;
+
+		//sao_packet = *buf;
 
     	sao_packet_net.syncword     = htons (sao_packet_net.syncword     );
     	sao_packet_net.hdr.packetid = htons (sao_packet_net.hdr.packetid );
     	sao_packet_net.hdr.pdl      = htons (sao_packet_net.hdr.pdl      );
     	sao_packet_net.end          = htons (sao_packet_net.end          );
-*/
+
 		printf("listener: packet is %d bytes long\n", numbytes);
 		//buf[numbytes] = '\0';
 		printf("listener: packet contains \"%s\"\n", buf);

@@ -15,6 +15,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 
+//#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
 #include <iar_engines.h>
 
 #define PORT "3490"  // the port users will be connecting to
@@ -22,7 +23,7 @@
 #define MAXBUFLEN 100
 
 #define BACKLOG 10	 // how many pending connections queue will hold
-
+/*
 void sigchld_handler(int s)
 {
 	(void)s; // quiet unused variable warning
@@ -34,7 +35,7 @@ void sigchld_handler(int s)
 
 	errno = saved_errno;
 }
-
+*/
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -59,7 +60,8 @@ int main(void)
 	char s[INET6_ADDRSTRLEN];
 	int rv, numbytes;
 	uint16_t packetid;
-
+	void *puntero;
+ 	struct SAO_data_trasnport *ptr;
 
    	struct SAO_data_transport sao_packet, sao_packet_net;
     /*sao_packet.syncword           = SYNCWORD;
@@ -117,14 +119,6 @@ int main(void)
 		exit(1);
 	}
 
-	sa.sa_handler = sigchld_handler; // reap all dead processes
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-		perror("sigaction");
-		exit(1);
-	}
-
 	printf("server: waiting for connections...\n");
 
 	while(1) {  // main accept() loop
@@ -140,10 +134,7 @@ int main(void)
 			s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
-// &sao_pcket
-		if ((numbytes = read(new_fd, buf, MAXBUFLEN) == -1))
-		//if ((numbytes = read(new_fd,*buf,sizeof buf)) == -1)
-			//(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		if ((numbytes = read(new_fd, buf, sizeof sao_packet)) == -1)
 		{
 			perror("recv");
 			exit(1);
@@ -158,28 +149,21 @@ int main(void)
 		}
 		
 
-		//sao_packet = *buf;
+		fwrite(buf,1,MAXBUFLEN,stdout);
 
-    	sao_packet_net.syncword     = htons (sao_packet_net.syncword     );
-    	sao_packet_net.hdr.packetid = htons (sao_packet_net.hdr.packetid );
-    	sao_packet_net.hdr.pdl      = htons (sao_packet_net.hdr.pdl      );
-    	sao_packet_net.end          = htons (sao_packet_net.end          );
 
-		printf("listener: packet is %d bytes long\n", numbytes);
-		//buf[numbytes] = '\0';
+  		printf("listener: packet is %d bytes long\n", numbytes);
+		buf[numbytes] = '\0';
 		printf("listener: packet contains \"%s\"\n", buf);
 		
-		//if (send(new_fd, "Hello, world!", 13, 0) == -1)
-		//		perror("send");
-
-		if (!fork()) { // this is the child process
-			//close(sockfd); // child doesn't need the listener
-			if (write(new_fd, "Hello", MAXBUFLEN) == -1)
-				perror("send");
-			//close(new_fd);
-			//exit(0);
+		
+		if (write(new_fd, buf, MAXBUFLEN) == -1)
+		{
+			perror("send");
+			close(new_fd);
+			exit(0);
 		}
-		//close(new_fd);  // parent doesn't need this
+		
 	
 	}
 	close(new_fd);

@@ -14,6 +14,7 @@
 
 #include <arpa/inet.h>
 
+//#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
 #include <iar_engines.h>
 
 #define PORT "3490" // the port client will be connecting to 
@@ -49,12 +50,6 @@ int main(int argc, char *argv[])
 // DEFINICION DE PAQUETE PARA ENVIAR
 	packetid = 0x00;
 	
-
-  	//struct SAO_data_transport_payload payload;
-
-	//gettimeofday(&payload.timestamp, NULL);
-	//strcpy(&payload.data,mensaje);
-
 	struct SAO_data_transport sao_packet, sao_packet_net;
     sao_packet.syncword           = SYNCWORD;
     sao_packet.hdr.version        = VERSION;
@@ -67,19 +62,13 @@ int main(int argc, char *argv[])
 	strcpy (sao_packet.payload.data, comando);
     
     sao_packet.end                = END;
+    
+	printf("tamaño paquete %i", sizeof sao_packet);
+	fwrite(&sao_packet,1,MAXBUFLEN,stdout);
 
-	//printf("sao packet %s", sao_packet.syncword);
 
 	bzero(&buff, BUFFLEN);
 
-	/*sao_packet_net = sao_packet;
-
-    sao_packet_net.syncword     = htons (sao_packet_net.syncword     );
-    sao_packet_net.hdr.packetid = htons (sao_packet_net.hdr.packetid );
-    sao_packet_net.hdr.pdl      = htons (sao_packet_net.hdr.pdl      );
-    sao_packet_net.end          = htons (sao_packet_net.end          );
-
-*/
 
 	if (argc != 2) {
 	    fprintf(stderr,"usage: client hostname\n");
@@ -126,18 +115,18 @@ int main(int argc, char *argv[])
 	strcpy(mens_cli, "Prueba");	
 
 	//if (send(sockfd, &sao_packet, MAXDATASIZE, 0) == -1) 
-	if (write(sockfd, &sao_packet, MAXBUFLEN) == -1)
+	if (write(sockfd, &sao_packet, sizeof sao_packet) == -1)
 	{
 	    perror("send");
 	    exit(1);
 	} 
-	if ((numbytes = read(sockfd, buff,MAXBUFLEN)) == -1)
-	{//if ((numbytes = recv(sockfd, buff, MAXDATASIZE, 0)) == -1) {
+	if ((numbytes = read(sockfd, buff, MAXBUFLEN)) == -1)
+	{
 	    perror("recv");
 	    exit(1);
 	} 
-	
-	//buf[numbytes] = '\0';
+	fwrite(buff,1,MAXBUFLEN,stdout);
+
 
 	printf("client: received \"%s\"\n",buff);
 

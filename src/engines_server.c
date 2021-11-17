@@ -15,8 +15,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 
-//#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
-#include <iar_engines.h>
+#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
+//#include <iar_engines.h>
 
 #define PORT "3490"  // the port users will be connecting to
 
@@ -45,6 +45,10 @@ void *get_in_addr(struct sockaddr *sa)
 	}
 
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+uint8_t desempaquetar(void * ptr){
+
 }
 
 int main(void)
@@ -134,7 +138,7 @@ int main(void)
 			s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
-		if ((numbytes = read(new_fd, buf, sizeof sao_packet)) == -1)
+		if ((numbytes = read(new_fd, &puntero, sizeof sao_packet)) == -1)
 		{
 			perror("recv");
 			exit(1);
@@ -150,11 +154,12 @@ int main(void)
 		
 
 		fwrite(buf,1,MAXBUFLEN,stdout);
+		printf("\n");
 
-
-  		printf("listener: packet is %d bytes long\n", numbytes);
+  		
+		printf("listener: packet is %d bytes long\n", numbytes);
 		buf[numbytes] = '\0';
-		printf("listener: packet contains \"%s\"\n", buf);
+		printf("listener: packet contains \"%x\"\n", puntero);
 		
 		
 		if (write(new_fd, buf, MAXBUFLEN) == -1)

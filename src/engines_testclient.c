@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -14,8 +15,8 @@
 
 #include <arpa/inet.h>
 
-//#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
-#include <iar_engines.h>
+#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
+//#include <iar_engines.h>
 
 #define PORT "3490" // the port client will be connecting to 
 
@@ -37,7 +38,7 @@ void *get_in_addr(struct sockaddr *sa)
 int main(int argc, char *argv[])
 {
 	uint16_t packetid;
-	char comando [CONTPACKETLEN] = "0x80";
+	uint16_t comando [CONTPACKETLEN] = {0x80,0x00};
 	int sockfd, numbytes;  
 	char buff[MAXBUFLEN];
 	struct addrinfo hints, *servinfo, *p;
@@ -58,14 +59,29 @@ int main(int argc, char *argv[])
     sao_packet.hdr.packet_counter = 0;
     sao_packet.hdr.pdl            = sizeof(struct SAO_data_transport_payload);
 	
-	gettimeofday(sao_packet.payload.timestamp, NULL);
+	printf (gettimeofday(sao_packet.payload.timestamp, NULL));
 	strcpy (sao_packet.payload.data, comando);
     
     sao_packet.end                = END;
-    
+ 
+	printf("comando: %hhx \n", comando);
+	//printf("Sync: % " PRIu16 " \n", sao_packet.syncword, "\n" );
+	printf("sao packet Sync: %x \n",sao_packet.syncword);
+	printf("sao packet version: %x \n",sao_packet.hdr.version);
+	printf("sao packet pkid: %x \n",sao_packet.hdr.packetid);
+	printf("sao packet mess: %x \n",sao_packet.hdr.message_type);
+	printf("sao packet pkt count: %x \n",sao_packet.hdr.packet_counter);
+	printf("sao packet pdl: %x \n",sao_packet.hdr.pdl);
+	printf("sao packet tstmp: %lld \n",sao_packet.payload.timestamp[0]);
+	printf("sao packet tstmp: %lld \n",sao_packet.payload.timestamp[1]);
+	printf("sao packet data: %hhd \n",sao_packet.payload.data[0]);
+	printf("sao packet data: %hhd \n",sao_packet.payload.data[1]);
+
+	printf("sao packet end: %x \n",sao_packet.end);
+
 	printf("tamaño paquete %i", sizeof sao_packet);
 	fwrite(&sao_packet,1,MAXBUFLEN,stdout);
-
+	printf("\n");
 
 	bzero(&buff, BUFFLEN);
 
@@ -112,8 +128,7 @@ int main(int argc, char *argv[])
 
 	freeaddrinfo(servinfo); // all done with this structure
 
-	strcpy(mens_cli, "Prueba");	
-
+	
 	//if (send(sockfd, &sao_packet, MAXDATASIZE, 0) == -1) 
 	if (write(sockfd, &sao_packet, sizeof sao_packet) == -1)
 	{

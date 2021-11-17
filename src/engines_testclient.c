@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 	packetid = 0x00;
 	
 	struct SAO_data_transport sao_packet, sao_packet_net;
+	struct SAO_data_transport *ptrSAO;
     sao_packet.syncword           = SYNCWORD;
     sao_packet.hdr.version        = VERSION;
     sao_packet.hdr.packetid       = packetid;
@@ -64,6 +65,8 @@ int main(int argc, char *argv[])
     
     sao_packet.end                = END;
  
+	sao_packet_net = sao_packet;
+
 	printf("comando: %hhx \n", comando);
 	//printf("Sync: % " PRIu16 " \n", sao_packet.syncword, "\n" );
 	printf("sao packet Sync: %x \n",sao_packet.syncword);
@@ -74,14 +77,40 @@ int main(int argc, char *argv[])
 	printf("sao packet pdl: %x \n",sao_packet.hdr.pdl);
 	printf("sao packet tstmp: %lld \n",sao_packet.payload.timestamp[0]);
 	printf("sao packet tstmp: %lld \n",sao_packet.payload.timestamp[1]);
-	printf("sao packet data: %hhd \n",sao_packet.payload.data[0]);
-	printf("sao packet data: %hhd \n",sao_packet.payload.data[1]);
+	printf("sao packet data: %hhx \n",sao_packet.payload.data[0]);
+	printf("sao packet data: %hhx \n",sao_packet.payload.data[1]);
 
 	printf("sao packet end: %x \n",sao_packet.end);
 
 	printf("tamaño paquete %i", sizeof sao_packet);
-	fwrite(&sao_packet,1,MAXBUFLEN,stdout);
+
 	printf("\n");
+
+	sao_packet_net.syncword     		= htons (sao_packet_net.syncword     );
+	sao_packet_net.hdr.version 			= htons (sao_packet_net.hdr.version );
+    sao_packet_net.hdr.packetid 		= htons (sao_packet_net.hdr.packetid );
+    sao_packet_net.hdr.message_type 	= htons (sao_packet_net.hdr.message_type );
+    sao_packet_net.hdr.packet_counter 	= htons (sao_packet_net.hdr.packet_counter );
+    sao_packet_net.hdr.pdl      		= htons (sao_packet_net.hdr.pdl      );
+	sao_packet_net.payload.timestamp[0]	= htons (sao_packet_net.payload.timestamp[0] );
+	sao_packet_net.payload.timestamp[1]	= htons (sao_packet_net.payload.timestamp[1] );
+	sao_packet_net.payload.data[0]		= htons (sao_packet_net.payload.data[0]);
+	sao_packet_net.payload.data[1]		= htons (sao_packet_net.payload.data[1]);
+    sao_packet_net.hdr.packetid 		= htons (sao_packet_net.hdr.packetid );
+	sao_packet_net.end          		= htons (sao_packet_net.end          );
+
+	printf("sao packet Sync: %x \n",sao_packet_net.syncword);
+	printf("sao packet version: %d \n",sao_packet_net.hdr.version);
+	printf("sao packet pkid: %d \n",sao_packet_net.hdr.packetid);
+	printf("sao packet mess: %x \n",sao_packet_net.hdr.message_type);
+	printf("sao packet pkt count: %d \n",sao_packet_net.hdr.packet_counter);
+	printf("sao packet pdl: %d \n",sao_packet_net.hdr.pdl);
+	printf("sao packet tstmp: %lld \n",sao_packet_net.payload.timestamp[0]);
+	printf("sao packet tstmp: %lld \n",sao_packet_net.payload.timestamp[1]);
+	printf("sao packet data: %hhx \n",sao_packet_net.payload.data[0]);
+	printf("sao packet data: %hhx \n",sao_packet_net.payload.data[1]);
+
+	printf("sao packet end: %x \n",sao_packet_net.end);
 
 	bzero(&buff, BUFFLEN);
 
@@ -129,7 +158,7 @@ int main(int argc, char *argv[])
 	freeaddrinfo(servinfo); // all done with this structure
 
 	
-	//if (send(sockfd, &sao_packet, MAXDATASIZE, 0) == -1) 
+	//if (send(sockfd, ptrSAO &sao_packet, MAXDATASIZE, 0) == -1) 
 	if (write(sockfd, &sao_packet, sizeof sao_packet) == -1)
 	{
 	    perror("send");

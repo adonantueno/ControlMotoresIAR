@@ -23,19 +23,20 @@
 #define MAXBUFLEN 100
 
 #define BACKLOG 10	 // how many pending connections queue will hold
-/*
-void sigchld_handler(int s)
-{
-	(void)s; // quiet unused variable warning
 
-	// waitpid() might overwrite errno, so we save and restore it:
-	int saved_errno = errno;
+#define COMANDOS 13  //CANTIDAD DE COMANADOS VALIDOS
 
-	while(waitpid(-1, NULL, WNOHANG) > 0);
+// Definiciones de funciones dinÃ¡micas
+//typedef void (*command)(byte *respuesta, boolean ing);
+typedef void (*command)(int ing); 
 
-	errno = saved_errno;
-}
-*/
+struct Command {
+  uint8_t comando;
+  command cmd; 
+};
+
+// DefiniciÃ³n arreglo para lookup table
+struct Command comandosValidos[COMANDOS];
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -51,8 +52,52 @@ uint8_t desempaquetar(void * ptr){
 
 }
 
+void verificarPayload(uint8_t comando){
+	int cmdValido = 0;
+	int cmdIngenieria = 0;
+	//for (int i = 0; i <= 12; i++) {
+      //if (strcmp(comando, comandosValidos[i].comando)){
+        cmdValido = 1; // Is valid command
+		printf("comando %hhx \n", comando);
+        //(*comandosValidos[i].cmd)(cmdIngenieria);
+		
+      //}else{
+		//  printf("comando no válido");
+		  
+	 // }
+   // }
+}
+
 int main(void)
 {
+	memset(comandosValidos, 0, sizeof(comandosValidos));
+	comandosValidos[0].comando        = 0x80;
+	comandosValidos[0].cmd            = "norteLento"; 
+	comandosValidos[1].comando        = 0x40;
+	comandosValidos[1].cmd            = "norteRapido"; 
+	comandosValidos[2].comando        = 0x20;
+	comandosValidos[2].cmd            = "surLento"; 
+	comandosValidos[3].comando        = 0x10;
+	comandosValidos[3].cmd            = "surRapido"; 
+	comandosValidos[4].comando        = 0x08;
+	comandosValidos[4].cmd            = "esteLento"; 
+	comandosValidos[5].comando        = 0x04;
+	comandosValidos[5].cmd            = "esteRapido"; 
+	comandosValidos[6].comando        = 0x02;
+	comandosValidos[6].cmd            = "oesteLento"; 
+	comandosValidos[7].comando        = 0x01;
+	comandosValidos[7].cmd            = "oesteRapido";
+	comandosValidos[8].comando        = 0xc0;
+	comandosValidos[8].cmd            = "pararNorteSur";
+	comandosValidos[9].comando        = 0xc1;
+	comandosValidos[9].cmd            = "pararEsteOeste";
+	comandosValidos[10].comando       = 0xc2;
+	comandosValidos[10].cmd           = "pararMotores";
+	comandosValidos[11].comando       = 0xb0;
+	comandosValidos[11].cmd           = "encender";
+	comandosValidos[12].comando       = 0xb1;
+	comandosValidos[12].cmd           = "apagar";
+
 	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
@@ -66,6 +111,15 @@ int main(void)
 	uint16_t packetid;
 	void *puntero;
  	struct SAO_data_trasnport *ptr;
+
+	union control
+	{
+		struct SAO_data_transport	paquete;
+		//uint16_t                          syncword;
+    	//struct SAO_data_transport_header  hdr;
+    	//struct SAO_data_transport_payload payload;
+    	//uint16_t                          end;
+	} recibe = {puntero}, *recibeptr=&recibe;
 
    	struct SAO_data_transport sao_packet, sao_packet_net;
     /*sao_packet.syncword           = SYNCWORD;
@@ -138,28 +192,35 @@ int main(void)
 			s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
-		if ((numbytes = read(new_fd, &puntero, sizeof sao_packet)) == -1)
+		if ((numbytes = read(new_fd, recibeptr, (sizeof sao_packet)+1 )) == -1)
 		{
 			perror("recv");
 			exit(1);
 		}
-		if (strcmp(buf, "Prueba") == 0)
-		{
-			printf("son iguales : \n");
-			printf("buffer \"%s\"\n", buf);	
 
-		}else{
-			printf("no son iguales");
-		}
-		
+		verificarPayload(recibeptr->paquete.payload.data[0]);
 
-		fwrite(buf,1,MAXBUFLEN,stdout);
-		printf("\n");
+		printf("Bytes %d \n", numbytes);
 
-  		
+  		printf("Se Recibió: \n");
+		printf("sao packet Sync: %x \n",recibeptr->paquete.syncword);
+		printf("sao packet version: %d \n",recibeptr->paquete.hdr.version);
+		printf("sao packet pkid: %d \n",recibeptr->paquete.hdr.packetid);
+		printf("sao packet mess: %x \n",recibeptr->paquete.hdr.message_type);
+		printf("sao packet pkt count: %d \n",recibeptr->paquete.hdr.packet_counter);
+		printf("sao packet pdl: %d \n",recibeptr->paquete.hdr.pdl);
+		printf("sao packet tstmp: %lld \n",recibeptr->paquete.payload.timestamp[0]);
+		printf("sao packet tstmp: %lld \n",recibeptr->paquete.payload.timestamp[1]);
+		printf("sao packet data: %hhx \n",recibeptr->paquete.payload.data[0]);
+		printf("sao packet data: %hhx \n",recibeptr->paquete.payload.data[1]);
+
+		printf("sao packet end: %x \n",recibeptr->paquete.end);
+
+		   //%hhx \n",recibeptr->paquete.payload.data[0]);
+
 		printf("listener: packet is %d bytes long\n", numbytes);
-		buf[numbytes] = '\0';
-		printf("listener: packet contains \"%x\"\n", puntero);
+		
+		//printf("listener: packet contains \"%hhx\"\n", puntero);
 		
 		
 		if (write(new_fd, buf, MAXBUFLEN) == -1)

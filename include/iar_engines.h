@@ -12,6 +12,17 @@
 #define ENCOPACKETLEN    40
 #define CONTPACKETLEN    2
 
+// Define instrucciones
+#define SLOW_NORTH            0X80
+#define FAST_NORTH            0X40
+#define SLOW_SOUTH            0X20
+#define FAST_SOUTH            0X10
+#define SLOW_EAST             0X08
+#define FAST_EAST             0X04
+#define SLOW_WEST             0X02
+#define FAST_WEST             0X01
+
+
 struct __attribute__((__packed__)) SAO_data_transport_header 
 {
     uint8_t     version;

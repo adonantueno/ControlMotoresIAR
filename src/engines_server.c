@@ -36,7 +36,8 @@ struct Command {
 };
 
 // DefiniciÃ³n arreglo para lookup table
-struct Command comandosValidos[COMANDOS];
+struct Command comandosValidos[COMANDOS], *ptrComandosValidos;
+
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -52,13 +53,17 @@ uint8_t desempaquetar(void * ptr){
 
 }
 
-void verificarPayload(uint8_t comando){
+void verificarPayload(uint8_t comando, struct Command * comandos){
 	int cmdValido = 0;
 	int cmdIngenieria = 0;
-	//for (int i = 0; i <= 12; i++) {
-      //if (strcmp(comando, comandosValidos[i].comando)){
-        cmdValido = 1; // Is valid command
-		printf("comando %hhx \n", comando);
+	uint8_t compara;
+	for (int i = 0; i <= 12; i++) {
+		strcpy(compara, comandos[i].comando);
+      	if (strcmp(comando, compara)){
+        	cmdValido = 1; // Is valid command
+			printf("El comando recibido es: %hhx \n", comando);
+		}
+	}
         //(*comandosValidos[i].cmd)(cmdIngenieria);
 		
       //}else{
@@ -197,8 +202,9 @@ int main(void)
 			perror("recv");
 			exit(1);
 		}
-
-		verificarPayload(recibeptr->paquete.payload.data[0]);
+		uint8_t compara = 0x80;
+		//strcpy(compara, recibeptr->paquete.payload.data[0]);
+		verificarPayload(compara, ptrComandosValidos);
 
 		printf("Bytes %d \n", numbytes);
 

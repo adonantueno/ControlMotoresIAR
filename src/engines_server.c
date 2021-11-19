@@ -53,13 +53,13 @@ uint8_t desempaquetar(void * ptr){
 
 }
 
-void verificarPayload(uint8_t comando, struct Command * comandos){
+void verificarPayload(uint8_t * comando, struct Command * comandos){
 	int cmdValido = 0;
 	int cmdIngenieria = 0;
 	uint8_t compara;
 	for (int i = 0; i <= 12; i++) {
-		strcpy(compara, comandos[i].comando);
-      	if (strcmp(comando, compara)){
+		//strcpy(compara, comandos[i].comando);
+      	if (strcmp(comando, comandos[i].comando)){
         	cmdValido = 1; // Is valid command
 			printf("El comando recibido es: %hhx \n", comando);
 		}
@@ -116,6 +116,7 @@ int main(void)
 	uint16_t packetid;
 	void *puntero;
  	struct SAO_data_trasnport *ptr;
+	uint8_t comandoRecibido = NULL;
 
 	union control
 	{
@@ -125,6 +126,8 @@ int main(void)
     	//struct SAO_data_transport_payload payload;
     	//uint16_t                          end;
 	} recibe = {puntero}, *recibeptr=&recibe;
+
+	
 
    	struct SAO_data_transport sao_packet, sao_packet_net;
     /*sao_packet.syncword           = SYNCWORD;
@@ -202,9 +205,13 @@ int main(void)
 			perror("recv");
 			exit(1);
 		}
-		uint8_t compara = 0x80;
+
+		//comandoRecibido = strdup(recibeptr->paquete.payload.data[0]);
+		//printf("hola %hhx \n",recibeptr->paquete.payload.data[0]);
+		//strcpy(comandoRecibido,recibeptr->paquete.payload.data[0]);
+		//printf("comando recibido: %hhx \n", comandoRecibido);
 		//strcpy(compara, recibeptr->paquete.payload.data[0]);
-		verificarPayload(compara, ptrComandosValidos);
+		verificarPayload(&recibeptr->paquete.payload.data[0], &ptrComandosValidos);
 
 		printf("Bytes %d \n", numbytes);
 
@@ -227,6 +234,8 @@ int main(void)
 		printf("listener: packet is %d bytes long\n", numbytes);
 		
 		//printf("listener: packet contains \"%hhx\"\n", puntero);
+		
+
 		
 		
 		if (write(new_fd, buf, MAXBUFLEN) == -1)

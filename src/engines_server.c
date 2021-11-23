@@ -49,74 +49,146 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-uint8_t desempaquetar(void * ptr){
+//void verificarPayload(uint8_t * comando, struct Command * comandos){
 
-}
-
-void verificarPayload(uint8_t * comando, struct Command * comandos){
+void verificarPayload(uint8_t * comando){
 	int cmdValido = 0;
 	int cmdIngenieria = 0;
-	uint8_t compara;
+	printf("recibido: %hhx \n",comando);
 	for (int i = 0; i <= 12; i++) {
-		//strcpy(compara, comandos[i].comando);
-      	if (strcmp(comando, comandos[i].comando)){
-        	cmdValido = 1; // Is valid command
-			printf("El comando recibido es: %hhx \n", comando);
+		printf("Valido corresp: %hhx \n",comandosValidos[i].comando);
+       	if(comando==comandosValidos[i].comando)
+		{
+			cmdValido = 1; // Is valid command
+			printf("Comando valido: %i\n",cmdValido);
+			printf("El comando recibido es: %hhx \n", comandosValidos[i].comando);
+			printf("cmd %s \n",*comandosValidos[i].cmd);
+			(comandosValidos[i].cmd)(cmdValido);
 		}
 	}
-        //(*comandosValidos[i].cmd)(cmdIngenieria);
+}	
 		
-      //}else{
-		//  printf("comando no válido");
-		  
-	 // }
-   // }
+
+//Llamados a funciones arduino
+
+//void norteLento (char *ans)
+void norteLento(int ing)
+{
+	printf("Entroooooo");
+}
+
+void norteRapido (char *ans)
+{
+}
+void surLento (char *ans)
+{
+}
+void surRapido (char *ans)
+{
+}
+void esteLento (char *ans)
+{
+}
+void esteRapido (char *ans)
+{
+}
+void oesteLento (char *ans)
+{
+}
+void oesteRapido (char *ans)
+{
+}
+void norteLentoIng (char *ans)
+{
+}
+
+void norteRapidoIng (char *ans)
+{
+}
+void surLentoIng (char *ans)
+{
+}
+void surRapidoIng (char *ans)
+{
+}
+void esteLentoIng (char *ans)
+{
+}
+void esteRapidoIng (char *ans)
+{
+}
+void oesteLentoIng (char *ans)
+{
+}
+void oesteRapidoIng (char *ans)
+{
+}
+
+void pararNorteSur (char *ans)
+{
+ 
+}
+void pararEsteOeste (char *ans)
+{
+}
+
+void pararMotores (char *ans)
+{
+}
+
+void encender (char *ans){
+}
+void apagar (char *ans){
+}
+
+char telemetria(){
+
 }
 
 int main(void)
 {
 	memset(comandosValidos, 0, sizeof(comandosValidos));
 	comandosValidos[0].comando        = 0x80;
-	comandosValidos[0].cmd            = "norteLento"; 
+	comandosValidos[0].cmd            = norteLento; 
 	comandosValidos[1].comando        = 0x40;
-	comandosValidos[1].cmd            = "norteRapido"; 
+	comandosValidos[1].cmd            = norteRapido; 
 	comandosValidos[2].comando        = 0x20;
-	comandosValidos[2].cmd            = "surLento"; 
+	comandosValidos[2].cmd            = surLento; 
 	comandosValidos[3].comando        = 0x10;
-	comandosValidos[3].cmd            = "surRapido"; 
+	comandosValidos[3].cmd            = surRapido; 
 	comandosValidos[4].comando        = 0x08;
-	comandosValidos[4].cmd            = "esteLento"; 
+	comandosValidos[4].cmd            = esteLento; 
 	comandosValidos[5].comando        = 0x04;
-	comandosValidos[5].cmd            = "esteRapido"; 
+	comandosValidos[5].cmd            = esteRapido; 
 	comandosValidos[6].comando        = 0x02;
-	comandosValidos[6].cmd            = "oesteLento"; 
+	comandosValidos[6].cmd            = oesteLento; 
 	comandosValidos[7].comando        = 0x01;
-	comandosValidos[7].cmd            = "oesteRapido";
+	comandosValidos[7].cmd            = oesteRapido;
 	comandosValidos[8].comando        = 0xc0;
-	comandosValidos[8].cmd            = "pararNorteSur";
+	comandosValidos[8].cmd            = pararNorteSur;
 	comandosValidos[9].comando        = 0xc1;
-	comandosValidos[9].cmd            = "pararEsteOeste";
+	comandosValidos[9].cmd            = pararEsteOeste;
 	comandosValidos[10].comando       = 0xc2;
-	comandosValidos[10].cmd           = "pararMotores";
+	comandosValidos[10].cmd           = pararMotores;
 	comandosValidos[11].comando       = 0xb0;
-	comandosValidos[11].cmd           = "encender";
+	comandosValidos[11].cmd           = encender;
 	comandosValidos[12].comando       = 0xb1;
-	comandosValidos[12].cmd           = "apagar";
+	comandosValidos[12].cmd           = apagar;
 
 	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
 	socklen_t sin_size;
-	struct sigaction sa;
 	int yes=1;
 	socklen_t addr_len;
-	char buf[MAXBUFLEN];
+	//char buf[MAXBUFLEN];
 	char s[INET6_ADDRSTRLEN];
 	int rv, numbytes;
 	uint16_t packetid;
 	void *puntero;
  	struct SAO_data_trasnport *ptr;
-	uint8_t comandoRecibido = NULL;
+	uint8_t comandoRecibido[2] = {0,0};
+	int cmdValido = 0;
 
 	union control
 	{
@@ -130,15 +202,7 @@ int main(void)
 	
 
    	struct SAO_data_transport sao_packet, sao_packet_net;
-    /*sao_packet.syncword           = SYNCWORD;
-    sao_packet.hdr.version        = VERSION;
-    sao_packet.hdr.packetid       = packetid;
-    sao_packet.hdr.message_type   = REPORTPACKET;
-    sao_packet.hdr.packet_counter = 0;
-    sao_packet.hdr.pdl            = sizeof(struct SAO_data_transport_payload);
-    sao_packet.end                = END;
-    */
-    
+  
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
@@ -186,7 +250,7 @@ int main(void)
 	}
 
 	printf("server: waiting for connections...\n");
-
+	
 	while(1) {  // main accept() loop
 		sin_size = sizeof their_addr;
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
@@ -200,21 +264,21 @@ int main(void)
 			s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
-		if ((numbytes = read(new_fd, recibeptr, (sizeof sao_packet)+1 )) == -1)
+//		if ((numbytes = read(new_fd, recibeptr, (sizeof sao_packet)+1 )) == -1)
+		
+		if ((numbytes = read(new_fd, &recibe, (sizeof sao_packet)+1 )) == -1)
 		{
 			perror("recv");
 			exit(1);
 		}
-
-		//comandoRecibido = strdup(recibeptr->paquete.payload.data[0]);
-		//printf("hola %hhx \n",recibeptr->paquete.payload.data[0]);
-		//strcpy(comandoRecibido,recibeptr->paquete.payload.data[0]);
-		//printf("comando recibido: %hhx \n", comandoRecibido);
-		//strcpy(compara, recibeptr->paquete.payload.data[0]);
-		verificarPayload(&recibeptr->paquete.payload.data[0], &ptrComandosValidos);
+		
+	//Asignacion de variabl para lookup table
+		comandoRecibido[0]=recibeptr->paquete.payload.data[0];
+			
+		verificarPayload(comandoRecibido[0]);
 
 		printf("Bytes %d \n", numbytes);
-
+		/*
   		printf("Se Recibió: \n");
 		printf("sao packet Sync: %x \n",recibeptr->paquete.syncword);
 		printf("sao packet version: %d \n",recibeptr->paquete.hdr.version);
@@ -229,23 +293,16 @@ int main(void)
 
 		printf("sao packet end: %x \n",recibeptr->paquete.end);
 
-		   //%hhx \n",recibeptr->paquete.payload.data[0]);
-
 		printf("listener: packet is %d bytes long\n", numbytes);
-		
-		//printf("listener: packet contains \"%hhx\"\n", puntero);
-		
+		*/
 
-		
-		
-		if (write(new_fd, buf, MAXBUFLEN) == -1)
+		if (write(new_fd, recibeptr, MAXBUFLEN) == -1)
 		{
 			perror("send");
 			close(new_fd);
 			exit(0);
 		}
-		
-	
+
 	}
 	close(new_fd);
 

@@ -47,6 +47,16 @@ int main(int argc, char *argv[])
 	char mens_cli[MAXBUFLEN];
 	char mensaje [3] = {0xA};
     struct timeval t;
+	void *puntero;
+
+	union control
+	{
+		struct SAO_data_transport	paquete;
+		//uint16_t                          syncword;
+    	//struct SAO_data_transport_header  hdr;
+    	//struct SAO_data_transport_payload payload;
+    	//uint16_t                          end;
+	} recibe = {puntero}, *recibeptr=&recibe;
 
 // DEFINICION DE PAQUETE PARA ENVIAR
 	packetid = 0x00;
@@ -164,12 +174,12 @@ int main(int argc, char *argv[])
 	    perror("send");
 	    exit(1);
 	} 
-	if ((numbytes = read(sockfd, buff, MAXBUFLEN)) == -1)
+	if ((numbytes = read(sockfd, &recibe, MAXBUFLEN)) == -1)
 	{
 	    perror("recv");
 	    exit(1);
 	} 
-	fwrite(buff,1,MAXBUFLEN,stdout);
+	fwrite(&recibeptr,1,MAXBUFLEN,stdout);
 
 
 	printf("client: received \"%s\"\n",buff);

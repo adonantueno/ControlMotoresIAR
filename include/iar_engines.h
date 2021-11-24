@@ -3,6 +3,7 @@
 #define END            0x581A
 #define VERSION        0x1
 #define ENCOID         0x0001
+#define ENGCMD         0x8D
 #define CMDPACKET      0x8E
 #define REPORTPACKET   0x8F
 

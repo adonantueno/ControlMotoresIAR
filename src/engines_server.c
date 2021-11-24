@@ -14,6 +14,8 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <termios.h>
+#include <fcntl.h>
 
 #include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
 //#include <iar_engines.h>
@@ -38,6 +40,43 @@ struct Command {
 // DefiniciÃ³n arreglo para lookup table
 struct Command comandosValidos[COMANDOS], *ptrComandosValidos;
 
+//open port copiado de enco_to_net
+int open_port(char *device)
+{
+    int fd;
+    struct termios io;
+
+    fd = open (device, O_RDWR | O_NOCTTY | O_NDELAY);
+
+    if (fd > 0)
+    {
+        memset (&io, 0, sizeof(io));
+
+        // Baudrate
+        cfsetispeed(&io, CONTROLBAUDRATE);
+        cfsetospeed(&io, CONTROLBAUDRATE);
+
+        // Enable receiver and set local mode
+        io.c_cflag |= (CLOCAL | CREAD);
+
+        // No parity (8N1)
+        io.c_cflag &= ~PARENB;
+        io.c_cflag &= ~CSTOPB;
+        io.c_cflag &= ~CSIZE;
+        io.c_cflag |= CS8;
+
+        io.c_cflag &= ~CRTSCTS;
+
+        // Set the new options for the port
+        tcsetattr(fd, TCSANOW, &io);
+
+        // Flush Buffer
+        usleep(500);
+        tcflush(fd, TCIOFLUSH);
+	    }
+    return fd;
+}
+	
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -51,21 +90,20 @@ void *get_in_addr(struct sockaddr *sa)
 
 //void verificarPayload(uint8_t * comando, struct Command * comandos){
 
-void verificarPayload(uint8_t * comando){
+void verificarPayload(uint8_t * comando, uint8_t * typeMsg){
 	int cmdValido = 0;
-	int cmdIngenieria = 0;
-	printf("recibido: %hhx \n",comando);
+	uint8_t cmdIngenieria = 0;
+	if (typeMsg == 0x8D)
+		cmdIngenieria = 1;
 	for (int i = 0; i <= 12; i++) {
-		printf("Valido corresp: %hhx \n",comandosValidos[i].comando);
        	if(comando==comandosValidos[i].comando)
 		{
 			cmdValido = 1; // Is valid command
-			printf("Comando valido: %i\n",cmdValido);
-			printf("El comando recibido es: %hhx \n", comandosValidos[i].comando);
-			printf("cmd %s \n",*comandosValidos[i].cmd);
 			(comandosValidos[i].cmd)(cmdValido);
 		}
 	}
+	if (cmdValido == 0)
+		printf("El comando solicitado no existe");
 }	
 		
 
@@ -74,7 +112,7 @@ void verificarPayload(uint8_t * comando){
 //void norteLento (char *ans)
 void norteLento(int ing)
 {
-	printf("Entroooooo");
+	printf("Entroooooo \n");
 }
 
 void norteRapido (char *ans)
@@ -147,6 +185,7 @@ char telemetria(){
 
 int main(void)
 {
+	//inicialización de hash table
 	memset(comandosValidos, 0, sizeof(comandosValidos));
 	comandosValidos[0].comando        = 0x80;
 	comandosValidos[0].cmd            = norteLento; 
@@ -175,39 +214,36 @@ int main(void)
 	comandosValidos[12].comando       = 0xb1;
 	comandosValidos[12].cmd           = apagar;
 
-	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
+	int fd, sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
 	socklen_t sin_size;
 	int yes=1;
 	socklen_t addr_len;
-	//char buf[MAXBUFLEN];
 	char s[INET6_ADDRSTRLEN];
 	int rv, numbytes;
 	uint16_t packetid;
 	void *puntero;
  	struct SAO_data_trasnport *ptr;
 	uint8_t comandoRecibido[2] = {0,0};
+	uint8_t tipoMensaje;
 	int cmdValido = 0;
 
+
+	//Estructura utilizada para parsear los mensajes recibidos
 	union control
 	{
 		struct SAO_data_transport	paquete;
-		//uint16_t                          syncword;
-    	//struct SAO_data_transport_header  hdr;
-    	//struct SAO_data_transport_payload payload;
-    	//uint16_t                          end;
 	} recibe = {puntero}, *recibeptr=&recibe;
 
-	
-
-   	struct SAO_data_transport sao_packet, sao_packet_net;
-  
+	struct SAO_data_transport sao_packet, sao_packet_net;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
+
+
 
 	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
@@ -264,44 +300,42 @@ int main(void)
 			s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
-//		if ((numbytes = read(new_fd, recibeptr, (sizeof sao_packet)+1 )) == -1)
-		
 		if ((numbytes = read(new_fd, &recibe, (sizeof sao_packet)+1 )) == -1)
 		{
 			perror("recv");
 			exit(1);
 		}
 		
+		printf("Bytes recibidos %d \n", numbytes);
+	
 	//Asignacion de variabl para lookup table
 		comandoRecibido[0]=recibeptr->paquete.payload.data[0];
-			
-		verificarPayload(comandoRecibido[0]);
+		tipoMensaje = recibeptr->paquete.hdr.message_type;
 
-		printf("Bytes %d \n", numbytes);
-		/*
-  		printf("Se Recibió: \n");
-		printf("sao packet Sync: %x \n",recibeptr->paquete.syncword);
-		printf("sao packet version: %d \n",recibeptr->paquete.hdr.version);
-		printf("sao packet pkid: %d \n",recibeptr->paquete.hdr.packetid);
-		printf("sao packet mess: %x \n",recibeptr->paquete.hdr.message_type);
-		printf("sao packet pkt count: %d \n",recibeptr->paquete.hdr.packet_counter);
-		printf("sao packet pdl: %d \n",recibeptr->paquete.hdr.pdl);
-		printf("sao packet tstmp: %lld \n",recibeptr->paquete.payload.timestamp[0]);
-		printf("sao packet tstmp: %lld \n",recibeptr->paquete.payload.timestamp[1]);
-		printf("sao packet data: %hhx \n",recibeptr->paquete.payload.data[0]);
-		printf("sao packet data: %hhx \n",recibeptr->paquete.payload.data[1]);
+	//Llamado a funcion que verifica el payload		
+		verificarPayload(comandoRecibido[0],tipoMensaje);
 
-		printf("sao packet end: %x \n",recibeptr->paquete.end);
 
-		printf("listener: packet is %d bytes long\n", numbytes);
-		*/
-
-		if (write(new_fd, recibeptr, MAXBUFLEN) == -1)
+	//Debo enviar telemetria por multicast
+		if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
 		{
 			perror("send");
 			close(new_fd);
 			exit(0);
 		}
+
+/*
+		// APERTURA DE PUERTO COM
+		fd = open_port("/dev/ttyUSB1");
+
+		// ENVIO INSTRUCCION A ARDUINO VIA SERIE
+		if (write(fd,"E",sizeof(char)) == -1)
+		{
+			perror("arduino");
+			close(fd);
+			exit(0);
+		}
+*/
 
 	}
 	close(new_fd);

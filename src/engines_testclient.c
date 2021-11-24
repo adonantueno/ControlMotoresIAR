@@ -1,7 +1,3 @@
-/*
-** client.c -- a stream socket client demo
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -15,8 +11,7 @@
 
 #include <arpa/inet.h>
 
-#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
-//#include <iar_engines.h>
+#include <iar_engines.h>
 
 #define PORT "3490" // the port client will be connecting to 
 
@@ -102,8 +97,8 @@ int main(int argc, char *argv[])
     sao_packet_net.hdr.message_type 	= htons (sao_packet_net.hdr.message_type );
     sao_packet_net.hdr.packet_counter 	= htons (sao_packet_net.hdr.packet_counter );
     sao_packet_net.hdr.pdl      		= htons (sao_packet_net.hdr.pdl      );
-	sao_packet_net.payload.timestamp[0]	= htons (sao_packet_net.payload.timestamp[0] );
-	sao_packet_net.payload.timestamp[1]	= htons (sao_packet_net.payload.timestamp[1] );
+	sao_packet_net.payload.timestamp[0]	= htonl (sao_packet_net.payload.timestamp[0] );
+	sao_packet_net.payload.timestamp[1]	= htonl (sao_packet_net.payload.timestamp[1] );
 	sao_packet_net.payload.data[0]		= htons (sao_packet_net.payload.data[0]);
 	sao_packet_net.payload.data[1]		= htons (sao_packet_net.payload.data[1]);
     sao_packet_net.hdr.packetid 		= htons (sao_packet_net.hdr.packetid );

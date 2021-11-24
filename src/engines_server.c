@@ -13,7 +13,6 @@
 #include <termios.h>
 #include <fcntl.h>
 
-//#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
 #include <iar_engines.h>
 
 #define PORT "3490"  // the port users will be connecting to
@@ -73,6 +72,25 @@ int open_port(char *device)
     return fd;
 }
 	
+// Open socket
+
+int open_socket(char *address, int port, struct sockaddr_in *addr)
+{
+    int sock;
+
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        perror("Error opening socket.");
+        exit(1);
+    }
+
+    addr->sin_family = AF_INET;
+    addr->sin_addr.s_addr = inet_addr(address);
+    addr->sin_port = htons(port);
+
+    return sock;
+}
+
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -114,16 +132,18 @@ void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd){
 
 //Llamados a funciones arduino
 
-//void norteLento (char *ans)
+
 void norteLento(int fd)
 {
 	printf("Entroooooo \n");
+	/*
 	if (write(fd,"E",sizeof(char)) == -1)
 	{
 		perror("arduino");
 		close(fd);
 		exit(0);
 	}
+	*/
 
 }
 
@@ -190,7 +210,7 @@ void oesteRapido (int fd)
 }
 void norteLentoIng (int fd)
 {	
-	printf("ING");
+	printf("ING \n");
 	if (write(fd,"M",sizeof(char)) == -1)
 	{
 		perror("arduino");
@@ -363,18 +383,13 @@ int main(void)
 		struct SAO_data_transport	paquete;
 	} recibe = {puntero}, *recibeptr=&recibe;
 
-
-	
 	// APERTURA DE PUERTO COM --> a donde debería ir?
-		
-	fd = open_port("/dev/stdout");
-
+	fd = open_port("/dev/ttyUSB1");
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
-
 
 	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
@@ -441,10 +456,11 @@ int main(void)
 	
 	//Asignacion de variables para lookup table
 		comandoRecibido[0]=recibeptr->paquete.payload.data[0];
-		printf("comando recibido %hhx \n", comandoRecibido[0]);
 		tipoMensaje = recibeptr->paquete.hdr.message_type;
 
 	//Llamado a funcion que verifica el payload		
+	//manda comando recibido, tipo de msj y file descriptor para
+	//comunicacion con arduino
 		verificarPayload(comandoRecibido[0],tipoMensaje, fd);
 
 

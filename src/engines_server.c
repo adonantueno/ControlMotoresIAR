@@ -1,7 +1,3 @@
-/*
-** server.c -- a stream socket server demo
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -17,8 +13,8 @@
 #include <termios.h>
 #include <fcntl.h>
 
-#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
-//#include <iar_engines.h>
+//#include </home/adonantueno/Proyectos/ControlMotoresIAR/include/iar_engines.h>
+#include <iar_engines.h>
 
 #define PORT "3490"  // the port users will be connecting to
 
@@ -90,7 +86,7 @@ void *get_in_addr(struct sockaddr *sa)
 
 //void verificarPayload(uint8_t * comando, struct Command * comandos){
 
-void verificarPayload(uint8_t * comando, uint8_t * typeMsg){
+void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd){
 	int cmdValido = 0;
 	uint8_t cmdIngenieria = 0;
 	if (typeMsg == 0x8D)
@@ -98,8 +94,17 @@ void verificarPayload(uint8_t * comando, uint8_t * typeMsg){
 	for (int i = 0; i <= 12; i++) {
        	if(comando==comandosValidos[i].comando)
 		{
-			cmdValido = 1; // Is valid command
-			(comandosValidos[i].cmd)(cmdValido);
+			cmdValido = 1;
+			if (cmdIngenieria == 1){
+				// HAY QUE INCORPORAR EL ING AL NOMBRE DEL COMANDO O 
+				// REIMPLEMENTAR LA HASH TABLE Y LOS CODIGOS ACEPTADOS
+				printf("Es de ING \n");
+			}
+			else
+			{
+				printf("No es de ing \n");
+				(comandosValidos[i].cmd)(fd);
+			}
 		}
 	}
 	if (cmdValido == 0)
@@ -110,76 +115,198 @@ void verificarPayload(uint8_t * comando, uint8_t * typeMsg){
 //Llamados a funciones arduino
 
 //void norteLento (char *ans)
-void norteLento(int ing)
+void norteLento(int fd)
 {
 	printf("Entroooooo \n");
+	if (write(fd,"E",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
+
 }
 
-void norteRapido (char *ans)
+void norteRapido (int fd)
 {
+	if (write(fd,"A",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}	
 }
-void surLento (char *ans)
-{
+void surLento (int fd)
+{	
+	if (write(fd,"F",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void surRapido (char *ans)
-{
+void surRapido (int fd)
+{	
+	if (write(fd,"B",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void esteLento (char *ans)
+void esteLento (int fd)
 {
+	if (write(fd,"G",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void esteRapido (char *ans)
-{
+void esteRapido (int fd)
+{	
+	if (write(fd,"C",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void oesteLento (char *ans)
-{
+void oesteLento (int fd)
+{	if (write(fd,"H",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void oesteRapido (char *ans)
-{
+void oesteRapido (int fd)
+{	if (write(fd,"D",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void norteLentoIng (char *ans)
-{
+void norteLentoIng (int fd)
+{	
+	printf("ING");
+	if (write(fd,"M",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
 
-void norteRapidoIng (char *ans)
-{
+void norteRapidoIng (int fd)
+{	if (write(fd,"I",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void surLentoIng (char *ans)
-{
+void surLentoIng (int fd)
+{	if (write(fd,"N",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void surRapidoIng (char *ans)
-{
+void surRapidoIng (int fd)
+{	if (write(fd,"J",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void esteLentoIng (char *ans)
-{
+void esteLentoIng (int fd)
+{	if (write(fd,"O",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void esteRapidoIng (char *ans)
-{
+void esteRapidoIng (int fd)
+{	if (write(fd,"K",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void oesteLentoIng (char *ans)
-{
+void oesteLentoIng (int fd)
+{	if (write(fd,"P",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void oesteRapidoIng (char *ans)
-{
+void oesteRapidoIng (int fd)
+{	if (write(fd,"L",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
 
-void pararNorteSur (char *ans)
-{
+void pararNorteSur (int fd)
+{	if (write(fd,"Y",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
  
 }
-void pararEsteOeste (char *ans)
-{
+void pararEsteOeste (int fd)
+{	if (write(fd,"Z",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
 
-void pararMotores (char *ans)
-{
+void pararMotores (int fd)
+{	if (write(fd,"X",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
 
-void encender (char *ans){
+void encender (int fd)
+{	if (write(fd,"T",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
-void apagar (char *ans){
+void apagar (int fd)
+{	if (write(fd,"U",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 }
 
-char telemetria(){
+char telemetria(int fd)
+{	if (write(fd,"W",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
 
 }
 
@@ -228,7 +355,7 @@ int main(void)
 	uint8_t comandoRecibido[2] = {0,0};
 	uint8_t tipoMensaje;
 	int cmdValido = 0;
-
+	struct SAO_data_transport sao_packet, sao_packet_net;
 
 	//Estructura utilizada para parsear los mensajes recibidos
 	union control
@@ -236,13 +363,17 @@ int main(void)
 		struct SAO_data_transport	paquete;
 	} recibe = {puntero}, *recibeptr=&recibe;
 
-	struct SAO_data_transport sao_packet, sao_packet_net;
+
+	
+	// APERTURA DE PUERTO COM --> a donde debería ir?
+		
+	fd = open_port("/dev/stdout");
+
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
-
 
 
 	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
@@ -308,12 +439,13 @@ int main(void)
 		
 		printf("Bytes recibidos %d \n", numbytes);
 	
-	//Asignacion de variabl para lookup table
+	//Asignacion de variables para lookup table
 		comandoRecibido[0]=recibeptr->paquete.payload.data[0];
+		printf("comando recibido %hhx \n", comandoRecibido[0]);
 		tipoMensaje = recibeptr->paquete.hdr.message_type;
 
 	//Llamado a funcion que verifica el payload		
-		verificarPayload(comandoRecibido[0],tipoMensaje);
+		verificarPayload(comandoRecibido[0],tipoMensaje, fd);
 
 
 	//Debo enviar telemetria por multicast
@@ -323,19 +455,6 @@ int main(void)
 			close(new_fd);
 			exit(0);
 		}
-
-/*
-		// APERTURA DE PUERTO COM
-		fd = open_port("/dev/ttyUSB1");
-
-		// ENVIO INSTRUCCION A ARDUINO VIA SERIE
-		if (write(fd,"E",sizeof(char)) == -1)
-		{
-			perror("arduino");
-			close(fd);
-			exit(0);
-		}
-*/
 
 	}
 	close(new_fd);

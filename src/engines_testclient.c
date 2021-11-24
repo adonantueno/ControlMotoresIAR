@@ -66,7 +66,8 @@ int main(int argc, char *argv[])
     sao_packet.syncword           = SYNCWORD;
     sao_packet.hdr.version        = VERSION;
     sao_packet.hdr.packetid       = packetid;
-    sao_packet.hdr.message_type   = REPORTPACKET;
+ //   sao_packet.hdr.message_type   = 0x8D;
+    sao_packet.hdr.message_type   = CMDPACKET;
     sao_packet.hdr.packet_counter = 0;
     sao_packet.hdr.pdl            = sizeof(struct SAO_data_transport_payload);
 	
@@ -78,7 +79,6 @@ int main(int argc, char *argv[])
 	sao_packet_net = sao_packet;
 
 	printf("comando: %hhx \n", comando);
-	//printf("Sync: % " PRIu16 " \n", sao_packet.syncword, "\n" );
 	printf("sao packet Sync: %x \n",sao_packet.syncword);
 	printf("sao packet version: %x \n",sao_packet.hdr.version);
 	printf("sao packet pkid: %x \n",sao_packet.hdr.packetid);

@@ -44,6 +44,13 @@ int main(int argc, char *argv[])
     struct timeval t;
 	void *puntero;
 
+// getopt
+
+	int op;
+	char *direccion;
+	//uint8_t comando;
+	uint8_t typeMessage;
+
 	union control
 	{
 		struct SAO_data_transport	paquete;
@@ -53,9 +60,29 @@ int main(int argc, char *argv[])
     	//uint16_t                          end;
 	} recibe = {puntero}, *recibeptr=&recibe;
 
+/*
+	while ((op = getopt(argc, argv, "d:c:t:")) != EOF)
+    	{
+        	switch (op)
+        	{
+            	case 'd':
+					direccion = argv[optind-1];
+                	break;
+            	case 'c':
+                	comando[0] = (argv[optind-1]);    
+            	break;
+            	case 't':
+                	typeMessage = (argv[optind-1]);
+            	break;
+            	default:
+                	exit(-1);
+        	}
+    	}
+
+*/
+
 // DEFINICION DE PAQUETE PARA ENVIAR
 	packetid = 0x00;
-	
 	struct SAO_data_transport sao_packet, sao_packet_net;
 	struct SAO_data_transport *ptrSAO;
     sao_packet.syncword           = SYNCWORD;
@@ -66,7 +93,8 @@ int main(int argc, char *argv[])
     sao_packet.hdr.packet_counter = 0;
     sao_packet.hdr.pdl            = sizeof(struct SAO_data_transport_payload);
 	
-	printf (gettimeofday(sao_packet.payload.timestamp, NULL));
+	//printf (gettimeofday(sao_packet.payload.timestamp, NULL));
+	//printf (gettimeofday(sao_packet.payload.timestamp, NULL));
 	strcpy (sao_packet.payload.data, comando);
     
     sao_packet.end                = END;
@@ -89,7 +117,7 @@ int main(int argc, char *argv[])
 
 	printf("tamaño paquete %i", sizeof sao_packet);
 
-	printf("\n");
+	//printf("\n");
 
 	sao_packet_net.syncword     		= htons (sao_packet_net.syncword     );
 	sao_packet_net.hdr.version 			= htons (sao_packet_net.hdr.version );
@@ -130,6 +158,7 @@ int main(int argc, char *argv[])
 	hints.ai_socktype = SOCK_STREAM;
 
 	if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
+	//if ((rv = getaddrinfo(direccion, PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}

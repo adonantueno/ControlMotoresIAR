@@ -21,19 +21,7 @@
 
 #define BACKLOG 10	 // how many pending connections queue will hold
 
-#define COMANDOS 13  //CANTIDAD DE COMANADOS VALIDOS
-
-// Definiciones de funciones dinÃ¡micas
-//typedef void (*command)(byte *respuesta, boolean ing);
-typedef void (*command)(int ing); 
-
-struct Command {
-  uint8_t comando;
-  command cmd; 
-};
-
-// DefiniciÃ³n arreglo para lookup table
-struct Command comandosValidos[COMANDOS], *ptrComandosValidos;
+#define COMANDOS 21 //CANTIDAD DE COMANADOS VALIDOS
 
 //open port copiado de enco_to_net
 int open_port(char *device)
@@ -104,13 +92,13 @@ void *get_in_addr(struct sockaddr *sa)
 
 //void verificarPayload(uint8_t * comando, struct Command * comandos){
 
-void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd){
+void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *validos){
 	int cmdValido = 0;
 	uint8_t cmdIngenieria = 0;
 	if (typeMsg == 0x8D)
-		cmdIngenieria = 1;
-	for (int i = 0; i <= 12; i++) {
-       	if(comando==comandosValidos[i].comando)
+		cmdIngenieria = 1; 
+	for (int i = 0; i <= COMANDOS; i++) {
+       	if(comando==validos[i].comando)
 		{
 			cmdValido = 1;
 			if (cmdIngenieria == 1){
@@ -121,8 +109,9 @@ void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd){
 			else
 			{
 				printf("No es de ing \n");
-				(comandosValidos[i].cmd)(fd);
+				(validos[i].cmd)(fd);
 			}
+			break;
 		}
 	}
 	if (cmdValido == 0)
@@ -211,12 +200,14 @@ void oesteRapido (int fd)
 void norteLentoIng (int fd)
 {	
 	printf("ING \n");
+	/*
 	if (write(fd,"M",sizeof(char)) == -1)
 	{
 		perror("arduino");
 		close(fd);
 		exit(0);
 	}
+	*/
 }
 
 void norteRapidoIng (int fd)
@@ -332,34 +323,37 @@ char telemetria(int fd)
 
 int main(void)
 {
+
+
+	
+	//struct Command comandosValidos[COMANDOS];
 	//inicialización de hash table
-	memset(comandosValidos, 0, sizeof(comandosValidos));
-	comandosValidos[0].comando        = 0x80;
-	comandosValidos[0].cmd            = norteLento; 
-	comandosValidos[1].comando        = 0x40;
-	comandosValidos[1].cmd            = norteRapido; 
-	comandosValidos[2].comando        = 0x20;
-	comandosValidos[2].cmd            = surLento; 
-	comandosValidos[3].comando        = 0x10;
-	comandosValidos[3].cmd            = surRapido; 
-	comandosValidos[4].comando        = 0x08;
-	comandosValidos[4].cmd            = esteLento; 
-	comandosValidos[5].comando        = 0x04;
-	comandosValidos[5].cmd            = esteRapido; 
-	comandosValidos[6].comando        = 0x02;
-	comandosValidos[6].cmd            = oesteLento; 
-	comandosValidos[7].comando        = 0x01;
-	comandosValidos[7].cmd            = oesteRapido;
-	comandosValidos[8].comando        = 0xc0;
-	comandosValidos[8].cmd            = pararNorteSur;
-	comandosValidos[9].comando        = 0xc1;
-	comandosValidos[9].cmd            = pararEsteOeste;
-	comandosValidos[10].comando       = 0xc2;
-	comandosValidos[10].cmd           = pararMotores;
-	comandosValidos[11].comando       = 0xb0;
-	comandosValidos[11].cmd           = encender;
-	comandosValidos[12].comando       = 0xb1;
-	comandosValidos[12].cmd           = apagar;
+	//comandos comandosValidos[COMANDOS];
+	//memset(comandosValidos, 0, sizeof(comandosValidos));
+	comandos comandosValidos[COMANDOS] = {
+		{0x80, norteLento},
+		{0x8A, norteLentoIng},
+		{0x40, norteRapido},
+		{0x4A, norteRapidoIng},
+		{0x20, surLento},
+		{0x2A, surLentoIng},
+		{0x10, surRapido},
+		{0x1A, surRapidoIng},
+		{0x08, esteLento},
+		{0x8A, esteLentoIng},
+		{0x04, esteRapido},
+		{0xA4, esteRapidoIng},
+		{0x02, oesteLento},
+		{0xA2, oesteLentoIng},
+		{0x01, oesteRapido},
+		{0xA1, oesteRapidoIng},
+		{0xC0, pararNorteSur},
+		{0xC1, pararEsteOeste},
+		{0xC2, pararMotores},
+		{0xb0, encender},
+		{0xb1, apagar}
+	};
+
 
 	int fd, sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
@@ -381,7 +375,9 @@ int main(void)
 	union control
 	{
 		struct SAO_data_transport	paquete;
+		//uint8_t data[sizeof(SAO_data_transport)];
 	} recibe = {puntero}, *recibeptr=&recibe;
+
 
 	// APERTURA DE PUERTO COM --> a donde debería ir?
 	fd = open_port("/dev/ttyUSB1");
@@ -461,7 +457,8 @@ int main(void)
 	//Llamado a funcion que verifica el payload		
 	//manda comando recibido, tipo de msj y file descriptor para
 	//comunicacion con arduino
-		verificarPayload(comandoRecibido[0],tipoMensaje, fd);
+
+		verificarPayload(comandoRecibido[0],tipoMensaje, fd, &comandosValidos);
 
 
 	//Debo enviar telemetria por multicast

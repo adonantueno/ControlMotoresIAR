@@ -13,6 +13,8 @@
 #define ENCOPACKETLEN    40
 #define CONTPACKETLEN    2
 
+#define COMANDOS        21
+
 // Define instrucciones
 #define SLOW_NORTH            0X80
 #define FAST_NORTH            0X40
@@ -46,3 +48,10 @@ struct __attribute__((__packed__)) SAO_data_transport
     struct SAO_data_transport_payload payload;
     uint16_t                          end;
 };
+
+typedef void (*command)(int ing); 
+
+typedef struct hashTable {
+	uint8_t comando;
+	command cmd; 
+} comandos;

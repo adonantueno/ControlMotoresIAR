@@ -27,8 +27,6 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-//ACA DEBERÍA TENER LAS FUNCIONES PRIMARIAS PARA HACER LA COMUNICACION
-
 
 int main(int argc, char *argv[])
 {
@@ -44,42 +42,14 @@ int main(int argc, char *argv[])
     struct timeval t;
 	void *puntero;
 
-// getopt
-
-	int op;
-	char *direccion;
-	//uint8_t comando;
-	uint8_t typeMessage;
 
 	union control
 	{
 		struct SAO_data_transport	paquete;
-		//uint16_t                          syncword;
-    	//struct SAO_data_transport_header  hdr;
-    	//struct SAO_data_transport_payload payload;
-    	//uint16_t                          end;
+
 	} recibe = {puntero}, *recibeptr=&recibe;
 
-/*
-	while ((op = getopt(argc, argv, "d:c:t:")) != EOF)
-    	{
-        	switch (op)
-        	{
-            	case 'd':
-					direccion = argv[optind-1];
-                	break;
-            	case 'c':
-                	comando[0] = (argv[optind-1]);    
-            	break;
-            	case 't':
-                	typeMessage = (argv[optind-1]);
-            	break;
-            	default:
-                	exit(-1);
-        	}
-    	}
 
-*/
 
 // DEFINICION DE PAQUETE PARA ENVIAR
 	packetid = 0x00;
@@ -88,15 +58,13 @@ int main(int argc, char *argv[])
     sao_packet.syncword           = SYNCWORD;
     sao_packet.hdr.version        = VERSION;
     sao_packet.hdr.packetid       = packetid;
- //   sao_packet.hdr.message_type   = 0x8D;
+    //sao_packet.hdr.message_type   = typeMessage;
     sao_packet.hdr.message_type   = CMDPACKET;
     sao_packet.hdr.packet_counter = 0;
     sao_packet.hdr.pdl            = sizeof(struct SAO_data_transport_payload);
-	
-	//printf (gettimeofday(sao_packet.payload.timestamp, NULL));
-	//printf (gettimeofday(sao_packet.payload.timestamp, NULL));
-	strcpy (sao_packet.payload.data, comando);
-    
+	strcpy (sao_packet.payload.data, comando);	
+	printf(gettimeofday(sao_packet.payload.timestamp, NULL));
+	    
     sao_packet.end                = END;
  
 	sao_packet_net = sao_packet;
@@ -131,19 +99,6 @@ int main(int argc, char *argv[])
 	sao_packet_net.payload.data[1]		= htons (sao_packet_net.payload.data[1]);
     sao_packet_net.hdr.packetid 		= htons (sao_packet_net.hdr.packetid );
 	sao_packet_net.end          		= htons (sao_packet_net.end          );
-
-	printf("sao packet Sync: %x \n",sao_packet_net.syncword);
-	printf("sao packet version: %d \n",sao_packet_net.hdr.version);
-	printf("sao packet pkid: %d \n",sao_packet_net.hdr.packetid);
-	printf("sao packet mess: %x \n",sao_packet_net.hdr.message_type);
-	printf("sao packet pkt count: %d \n",sao_packet_net.hdr.packet_counter);
-	printf("sao packet pdl: %d \n",sao_packet_net.hdr.pdl);
-	printf("sao packet tstmp: %lld \n",sao_packet_net.payload.timestamp[0]);
-	printf("sao packet tstmp: %lld \n",sao_packet_net.payload.timestamp[1]);
-	printf("sao packet data: %hhx \n",sao_packet_net.payload.data[0]);
-	printf("sao packet data: %hhx \n",sao_packet_net.payload.data[1]);
-
-	printf("sao packet end: %x \n",sao_packet_net.end);
 
 	bzero(&buff, BUFFLEN);
 

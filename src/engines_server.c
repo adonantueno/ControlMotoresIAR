@@ -95,12 +95,16 @@ void *get_in_addr(struct sockaddr *sa)
 void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *validos){
 	int cmdValido = 0;
 	uint8_t cmdIngenieria = 0;
+	printf("El comando recibido es: %hhx \n", comando);
 	if (typeMsg == 0x8D)
 		cmdIngenieria = 1; 
 	for (int i = 0; i <= COMANDOS; i++) {
        	if(comando==validos[i].comando)
 		{
 			cmdValido = 1;
+			(validos[i].cmd)(fd);
+			/*
+			Aqui se evalua si es un comando de ing. 
 			if (cmdIngenieria == 1){
 				// HAY QUE INCORPORAR EL ING AL NOMBRE DEL COMANDO O 
 				// REIMPLEMENTAR LA HASH TABLE Y LOS CODIGOS ACEPTADOS
@@ -111,7 +115,9 @@ void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *va
 				printf("No es de ing \n");
 				(validos[i].cmd)(fd);
 			}
+			*/
 			break;
+
 		}
 	}
 	if (cmdValido == 0)
@@ -323,8 +329,6 @@ char telemetria(int fd)
 
 int main(void)
 {
-
-
 	
 	//struct Command comandosValidos[COMANDOS];
 	//inicialización de hash table
@@ -368,14 +372,14 @@ int main(void)
  	struct SAO_data_trasnport *ptr;
 	uint8_t comandoRecibido[2] = {0,0};
 	uint8_t tipoMensaje;
-	int cmdValido = 0;
+	//int cmdValido = 0;
 	struct SAO_data_transport sao_packet, sao_packet_net;
 
 	//Estructura utilizada para parsear los mensajes recibidos
 	union control
 	{
 		struct SAO_data_transport	paquete;
-		//uint8_t data[sizeof(SAO_data_transport)];
+		uint8_t data[sizeof(struct SAO_data_transport)];
 	} recibe = {puntero}, *recibeptr=&recibe;
 
 

@@ -130,6 +130,7 @@ void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *va
 
 void norteLento(int fd)
 {
+	int numbytes = 0;
 	void *buf;
 	printf("Entroooooo \n");
 	
@@ -139,12 +140,12 @@ void norteLento(int fd)
 		close(fd);
 		exit(0);
 	}
-	if (read(fd,&buf,1) == -1){
+	if ((numbytes = read(fd,&buf,1)) == -1){
 		perror("lectura");
 		close (fd);
 		exit(0);
 	}
-	printf(buf);
+	printf("numbytes %d \n", numbytes);
 	//printf("telemetria %c \n", telemetria(fd,buf,1));
 
 }

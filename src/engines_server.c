@@ -130,15 +130,22 @@ void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *va
 
 void norteLento(int fd)
 {
+	void *buf;
 	printf("Entroooooo \n");
-	/*
+	
 	if (write(fd,"E",sizeof(char)) == -1)
 	{
 		perror("arduino");
 		close(fd);
 		exit(0);
 	}
-	*/
+	if (read(fd,&buf,1) == -1){
+		perror("lectura");
+		close (fd);
+		exit(0);
+	}
+	printf(buf);
+	//printf("telemetria %c \n", telemetria(fd,buf,1));
 
 }
 
@@ -206,14 +213,14 @@ void oesteRapido (int fd)
 void norteLentoIng (int fd)
 {	
 	printf("ING \n");
-	/*
+	
 	if (write(fd,"M",sizeof(char)) == -1)
 	{
 		perror("arduino");
 		close(fd);
 		exit(0);
 	}
-	*/
+	
 }
 
 void norteRapidoIng (int fd)
@@ -316,17 +323,25 @@ void apagar (int fd)
 		exit(0);
 	}
 }
-
-char telemetria(int fd)
-{	if (write(fd,"W",sizeof(char)) == -1)
+/*
+char telemetria(int fd, void *buf, size_t count)
+{	
+	
+	if (write(fd,"W",sizeof(char)) == -1)
 	{
 		perror("arduino");
 		close(fd);
 		exit(0);
 	}
+	if (read(fd,&buf,count) == -1){
+		perror("lectura arduino");
+		close(fd);
+		exit(0);
+	}
+	return buf;
 
 }
-
+*/
 int main(void)
 {
 	

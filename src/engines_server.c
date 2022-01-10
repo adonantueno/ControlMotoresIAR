@@ -95,11 +95,11 @@ void *get_in_addr(struct sockaddr *sa)
 void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *validos){
 	int cmdValido = 0;
 	uint8_t cmdIngenieria = 0;
-	printf("El comando recibido es: %hhx \n", comando);
-	if (typeMsg == 0x8D)
+	printf("El comando recibido es: %hhx \n", *comando);
+	if (*typeMsg == 0x8D)
 		cmdIngenieria = 1; 
 	for (int i = 0; i <= COMANDOS; i++) {
-       	if(comando==validos[i].comando)
+       	if(*comando==validos[i].comando)
 		{
 			cmdValido = 1;
 			(validos[i].cmd)(fd);
@@ -380,13 +380,10 @@ int main(void)
 	struct sockaddr_storage their_addr; // connector's address information
 	socklen_t sin_size;
 	int yes=1;
-	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
 	int rv, numbytes;
-	uint16_t packetid;
-	void *puntero;
- 	struct SAO_data_trasnport *ptr;
-	uint8_t comandoRecibido[2] = {0,0};
+ 	struct SAO_data_transport *ptr;
+	uint8_t comandoRecibido = 0;
 	uint8_t tipoMensaje;
 	//int cmdValido = 0;
 	struct SAO_data_transport sao_packet, sao_packet_net;
@@ -396,11 +393,12 @@ int main(void)
 	{
 		struct SAO_data_transport	paquete;
 		uint8_t data[sizeof(struct SAO_data_transport)];
-	} recibe = {puntero}, *recibeptr=&recibe;
+	} recibe;
 
 
-	// APERTURA DE PUERTO COM --> a donde debería ir?
-	fd = open_port("/dev/ttyUSB1");
+	// APERTURA DE PUERTO COM, esto debe ser un link simbolico
+	// al puerto real (por ej: ln -s /dev/ttyUSB0 /dev/ctrlmotores)
+	fd = open_port(DEVICE);
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
@@ -462,7 +460,7 @@ int main(void)
 			s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
-		if ((numbytes = read(new_fd, &recibe, (sizeof sao_packet)+1 )) == -1)
+		if ((numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport))) == -1))
 		{
 			perror("recv");
 			exit(1);
@@ -471,14 +469,14 @@ int main(void)
 		printf("Bytes recibidos %d \n", numbytes);
 	
 	//Asignacion de variables para lookup table
-		comandoRecibido[0]=recibeptr->paquete.payload.data[0];
-		tipoMensaje = recibeptr->paquete.hdr.message_type;
+		comandoRecibido = recibe.paquete.payload.data;
+		tipoMensaje = recibe.paquete.hdr.message_type;
 
 	//Llamado a funcion que verifica el payload		
 	//manda comando recibido, tipo de msj y file descriptor para
 	//comunicacion con arduino
 
-		verificarPayload(comandoRecibido[0],tipoMensaje, fd, &comandosValidos);
+		verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
 
 
 	//Debo enviar telemetria por multicast

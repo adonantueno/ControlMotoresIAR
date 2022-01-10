@@ -15,7 +15,7 @@
 
 #define PORT "3490" // the port client will be connecting to 
 
-#define MAXBUFLEN 100 // max number of bytes we can get at once 
+#define MAXBUFLEN 128 // max number of bytes we can get at once 
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	{
 		struct SAO_data_transport	paquete;
 
-	} recibe = {puntero}, *recibeptr=&recibe;
+	} recibe;
 
 
 
@@ -62,28 +62,24 @@ int main(int argc, char *argv[])
     sao_packet.hdr.message_type   = CMDPACKET;
     sao_packet.hdr.packet_counter = 0;
     sao_packet.hdr.pdl            = sizeof(struct SAO_data_transport_payload);
-	strcpy (sao_packet.payload.data, comando);	
-	printf(gettimeofday(sao_packet.payload.timestamp, NULL));
+	memcpy (&sao_packet.payload.data, &comando, sizeof(struct SAO_data_transport_payload));
 	    
     sao_packet.end                = END;
  
 	sao_packet_net = sao_packet;
 
-	printf("comando: %hhx \n", comando);
+	printf("comando: 0x%02X \n", *comando);
 	printf("sao packet Sync: %x \n",sao_packet.syncword);
 	printf("sao packet version: %x \n",sao_packet.hdr.version);
 	printf("sao packet pkid: %x \n",sao_packet.hdr.packetid);
 	printf("sao packet mess: %x \n",sao_packet.hdr.message_type);
 	printf("sao packet pkt count: %x \n",sao_packet.hdr.packet_counter);
 	printf("sao packet pdl: %x \n",sao_packet.hdr.pdl);
-	printf("sao packet tstmp: %lld \n",sao_packet.payload.timestamp[0]);
-	printf("sao packet tstmp: %lld \n",sao_packet.payload.timestamp[1]);
-	printf("sao packet data: %hhx \n",sao_packet.payload.data[0]);
-	printf("sao packet data: %hhx \n",sao_packet.payload.data[1]);
+	printf("sao packet data: %hhx \n",sao_packet.payload.data);
 
 	printf("sao packet end: %x \n",sao_packet.end);
 
-	printf("tamaño paquete %i", sizeof sao_packet);
+	printf("tamaño paquete %li", sizeof sao_packet);
 
 	//printf("\n");
 
@@ -93,10 +89,7 @@ int main(int argc, char *argv[])
     sao_packet_net.hdr.message_type 	= htons (sao_packet_net.hdr.message_type );
     sao_packet_net.hdr.packet_counter 	= htons (sao_packet_net.hdr.packet_counter );
     sao_packet_net.hdr.pdl      		= htons (sao_packet_net.hdr.pdl      );
-	sao_packet_net.payload.timestamp[0]	= htonl (sao_packet_net.payload.timestamp[0] );
-	sao_packet_net.payload.timestamp[1]	= htonl (sao_packet_net.payload.timestamp[1] );
-	sao_packet_net.payload.data[0]		= htons (sao_packet_net.payload.data[0]);
-	sao_packet_net.payload.data[1]		= htons (sao_packet_net.payload.data[1]);
+	sao_packet_net.payload.data		    = htons (sao_packet_net.payload.data);
     sao_packet_net.hdr.packetid 		= htons (sao_packet_net.hdr.packetid );
 	sao_packet_net.end          		= htons (sao_packet_net.end          );
 
@@ -158,7 +151,7 @@ int main(int argc, char *argv[])
 	    perror("recv");
 	    exit(1);
 	} 
-	fwrite(&recibeptr,1,MAXBUFLEN,stdout);
+	//fwrite(&recibeptr,1,MAXBUFLEN,stdout);
 
 
 	printf("client: received \"%s\"\n",buff);

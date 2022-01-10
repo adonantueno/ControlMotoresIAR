@@ -15,6 +15,8 @@
 
 #define COMANDOS        21
 
+#define DEVICE "/dev/ctrlmotores"
+
 // Define instrucciones
 #define SLOW_NORTH            0X80
 #define FAST_NORTH            0X40

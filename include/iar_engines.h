@@ -13,7 +13,7 @@
 #define ENCOPACKETLEN    40
 #define CONTPACKETLEN    2
 
-#define COMANDOS        21
+#define COMANDOS        22
 
 #define DEVICE "/dev/ctrlmotores"
 
@@ -48,6 +48,18 @@ struct __attribute__((__packed__)) SAO_data_transport
     struct SAO_data_transport_header  hdr;
     struct SAO_data_transport_payload payload;
     uint16_t                          end;
+};
+
+struct __attribute__((__packed__)) status_bits
+{
+    uint8_t OL: 1;  // bit 0
+    uint8_t OR: 1;  // bit 1
+    uint8_t EL: 1;  // bit 2
+    uint8_t ER: 1;  // bit 3
+    uint8_t SL: 1;  // bit 4
+    uint8_t SR: 1;  // bit 5
+    uint8_t NL: 1;  // bit 6
+    uint8_t NR: 1;  // bit 7
 };
 
 typedef void (*command)(int ing); 

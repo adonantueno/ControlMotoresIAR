@@ -21,7 +21,10 @@
 
 #define BACKLOG 10	 // how many pending connections queue will hold
 
-#define COMANDOS 21 //CANTIDAD DE COMANADOS VALIDOS
+static union {
+	struct status_bits st;
+	uint8_t      	   bitval;
+} statusbits;
 
 //open port copiado de enco_to_net
 int open_port(char *device)
@@ -324,6 +327,73 @@ void apagar (int fd)
 		exit(0);
 	}
 }
+
+void status (int fd)
+{
+	uint8_t val;
+	int ret;
+	char buf[5], id[2];
+
+	if (write(fd, "W",sizeof(char)) == -1)
+	{
+		perror("arduino");
+		close(fd);
+		exit(0);
+	}
+	else
+	{
+		/*
+		Respuesta esperada (40bytes):
+		OL:0                                                                         
+		OR:0                                                                         
+		EL:0                                                                         
+		ER:0                                                                         
+		SL:0                                                        
+		SR:0                                                                                                             
+		NL:0                                                        
+		NR:0
+
+		vamos a generar un campo de bits sobre un uint8_t:
+		bit: 7  6  5  4  3  2  1  0
+		     NR NL SR SL ER EL OR OL
+		*/
+		do
+		{
+			ret = read(fd, buf, 5);
+			if (ret == 5)
+			{
+				memcpy(&id, &buf[0], 2);
+				val = atoi(&buf[3]);
+
+				if 		(strcmp(id, "OL"))
+					statusbits.st.OL = val;
+				else if (strcmp(id, "OR"))
+					statusbits.st.OR = val;
+				else if (strcmp(id, "EL"))
+					statusbits.st.EL = val;
+				else if (strcmp(id, "ER"))
+					statusbits.st.ER = val;
+				else if (strcmp(id, "SL"))
+					statusbits.st.SL = val;
+				else if (strcmp(id, "SR"))
+					statusbits.st.SR = val;
+				else if (strcmp(id, "NL"))
+					statusbits.st.NL = val;
+				else if (strcmp(id, "NR"))
+				{
+					statusbits.st.NR = val;
+					break;
+				}
+				else
+					break;
+			}
+			else
+				break;
+		} while (1);
+	}
+
+	printf("0x%02X", statusbits.bitval);
+}
 /*
 char telemetria(int fd, void *buf, size_t count)
 {	
@@ -370,8 +440,9 @@ int main(void)
 		{0xC0, pararNorteSur},
 		{0xC1, pararEsteOeste},
 		{0xC2, pararMotores},
-		{0xb0, encender},
-		{0xb1, apagar}
+		{0xB0, encender},
+		{0xB1, apagar},
+		{0xB2, status}
 	};
 
 
@@ -399,6 +470,8 @@ int main(void)
 	// APERTURA DE PUERTO COM, esto debe ser un link simbolico
 	// al puerto real (por ej: ln -s /dev/ttyUSB0 /dev/ctrlmotores)
 	fd = open_port(DEVICE);
+
+	statusbits.bitval = 0x0;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;

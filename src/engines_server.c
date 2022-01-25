@@ -559,13 +559,14 @@ int main(void)
 
 
 		//Debo enviar telemetria por multicast
-			if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
-			{
-				perror("send");
-				close(new_fd);
-				exit(0);
-			}
-
+		/*
+		if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
+		{
+			perror("send");
+			close(new_fd);
+			exit(0);
+		}
+		*/
 		}
 		close(new_fd);
 	}

@@ -333,7 +333,9 @@ void status (int fd)
 	uint8_t val;
 	int ret;
 	char buf[5], id[2];
-
+	
+	tcflush(fd,TCIOFLUSH);
+	
 	if (write(fd, "W",sizeof(char)) == -1)
 	{
 		perror("arduino");
@@ -343,15 +345,16 @@ void status (int fd)
 	else
 	{
 		/*
-		Respuesta esperada (40bytes):
-		OL:0                                                                         
-		OR:0                                                                         
-		EL:0                                                                         
-		ER:0                                                                         
-		SL:0                                                        
-		SR:0                                                                                                             
-		NL:0                                                        
-		NR:0
+		Respuesta esperada (54bytes):
+		OL:0\r\n                                                                         
+		OR:0\r\n                                                                         
+		EL:0\r\n                                                                         
+		ER:0\r\n                                                                         
+		SL:0\r\n                                                        
+		SR:0\r\n
+		LG:0\r\n                                                                                                             
+		NL:0\r\n                                                        
+		NR:0\r\n
 
 		vamos a generar un campo de bits sobre un uint8_t:
 		bit: 7  6  5  4  3  2  1  0
@@ -359,11 +362,13 @@ void status (int fd)
 		*/
 		do
 		{
-			ret = read(fd, buf, 5);
-			if (ret == 5)
+			ret = read(fd, buf, 6);
+			if (ret == 6)
 			{
 				memcpy(&id, &buf[0], 2);
 				val = atoi(&buf[3]);
+				printf("%c%c%c%c  0x%02X 0x%02X\n", 
+						buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
 
 				if 		(strcmp(id, "OL"))
 					statusbits.st.OL = val;
@@ -384,15 +389,15 @@ void status (int fd)
 					statusbits.st.NR = val;
 					break;
 				}
-				else
-					break;
+				else if (strcmp(id, "LG"))
+					continue;
 			}
 			else
 				break;
 		} while (1);
 	}
 
-	printf("0x%02X", statusbits.bitval);
+	printf("Status: 0x%02X\n", statusbits.bitval);
 }
 /*
 char telemetria(int fd, void *buf, size_t count)
@@ -517,51 +522,53 @@ int main(void)
 		perror("listen");
 		exit(1);
 	}
-
-	printf("server: waiting for connections...\n");
-	
-	sin_size = sizeof their_addr;
-	new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-	if (new_fd == -1) {
-		perror("accept");
-		exit(-1);
-	}
-
-	inet_ntop(their_addr.ss_family,
-		get_in_addr((struct sockaddr *)&their_addr),
-		s, sizeof s);
-	printf("server: got connection from %s\n", s);
-
-	while(1) {
-		if ((numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport))) == -1))
-		{
-			perror("recv");
-			exit(1);
-		}
+	while (1)
+	{
+		printf("server: waiting for connections...\n");
 		
-		printf("Bytes recibidos %d \n", numbytes);
-	
-	//Asignacion de variables para lookup table
-		comandoRecibido = recibe.paquete.payload.data;
-		tipoMensaje = recibe.paquete.hdr.message_type;
-
-	//Llamado a funcion que verifica el payload		
-	//manda comando recibido, tipo de msj y file descriptor para
-	//comunicacion con arduino
-
-		verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
-
-
-	//Debo enviar telemetria por multicast
-		if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
-		{
-			perror("send");
-			close(new_fd);
-			exit(0);
+		sin_size = sizeof their_addr;
+		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+		if (new_fd == -1) {
+			perror("accept");
+			exit(-1);
 		}
 
+		inet_ntop(their_addr.ss_family,
+			get_in_addr((struct sockaddr *)&their_addr),
+			s, sizeof s);
+		printf("server: got connection from %s\n", s);
+
+		while(1) {
+			if ((numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport))) == -1))
+			{
+				perror("recv");
+				exit(1);
+			}
+			
+			printf("Bytes recibidos %d \n", numbytes);
+		
+		//Asignacion de variables para lookup table
+			comandoRecibido = recibe.paquete.payload.data;
+			tipoMensaje = recibe.paquete.hdr.message_type;
+
+		//Llamado a funcion que verifica el payload		
+		//manda comando recibido, tipo de msj y file descriptor para
+		//comunicacion con arduino
+
+			verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
+
+
+		//Debo enviar telemetria por multicast
+			if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
+			{
+				perror("send");
+				close(new_fd);
+				exit(0);
+			}
+
+		}
+		close(new_fd);
 	}
-	close(new_fd);
 
 	return 0;
 }

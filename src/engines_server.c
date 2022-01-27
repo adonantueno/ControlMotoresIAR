@@ -532,7 +532,7 @@ int main(void)
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
 		if (new_fd == -1) {
 			perror("accept");
-			//exit(-1);
+			exit(-1);
 		}
 
 		inet_ntop(their_addr.ss_family,
@@ -557,16 +557,17 @@ int main(void)
 		//manda comando recibido, tipo de msj y file descriptor para
 		//comunicacion con arduino
 
+		if (numbytes > 0)
 			verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
 
 
 		//Debo enviar telemetria por multicast
-			if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
-			{
-				perror("send");
-				close(new_fd);
-				exit(0);
-			}
+		//	if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
+		//	{
+		//		perror("send");
+		//		close(new_fd);
+		//		exit(0);
+		//	}
 
 		}
 		close(new_fd);

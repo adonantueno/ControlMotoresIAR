@@ -518,55 +518,59 @@ int main(void)
 		exit(1);
 	}
 
-	if (listen(sockfd, BACKLOG) == -1) {
-		perror("listen");
-		exit(1);
-	}
+	while (1)
+	{
 
-	printf("server: waiting for connections...\n");
-	
-	sin_size = sizeof their_addr;
-	new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-	if (new_fd == -1) {
-		perror("accept");
-		exit(-1);
-	}
-
-	inet_ntop(their_addr.ss_family,
-		get_in_addr((struct sockaddr *)&their_addr),
-		s, sizeof s);
-	printf("server: got connection from %s\n", s);
-
-	while(1) {
-		if ((numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport))) == -1))
-		{
-			perror("recv");
+		if (listen(sockfd, BACKLOG) == -1) {
+			perror("listen");
 			exit(1);
 		}
+
+		printf("server: waiting for connections...\n");
 		
-		printf("Bytes recibidos %d \n", numbytes);
-	
-	//Asignacion de variables para lookup table
-		comandoRecibido = recibe.paquete.payload.data;
-		tipoMensaje = recibe.paquete.hdr.message_type;
-
-	//Llamado a funcion que verifica el payload		
-	//manda comando recibido, tipo de msj y file descriptor para
-	//comunicacion con arduino
-
-		verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
-
-
-	//Debo enviar telemetria por multicast
-		if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
-		{
-			perror("send");
-			close(new_fd);
-			exit(0);
+		sin_size = sizeof their_addr;
+		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+		if (new_fd == -1) {
+			perror("accept");
+			exit(-1);
 		}
 
+		inet_ntop(their_addr.ss_family,
+			get_in_addr((struct sockaddr *)&their_addr),
+			s, sizeof s);
+		printf("server: got connection from %s\n", s);
+
+		while(1) {
+			if ((numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport))) == -1))
+			{
+				perror("recv");
+				exit(1);
+			}
+			
+			printf("Bytes recibidos %d \n", numbytes);
+		
+		//Asignacion de variables para lookup table
+			comandoRecibido = recibe.paquete.payload.data;
+			tipoMensaje = recibe.paquete.hdr.message_type;
+
+		//Llamado a funcion que verifica el payload		
+		//manda comando recibido, tipo de msj y file descriptor para
+		//comunicacion con arduino
+
+			verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
+
+
+		//Debo enviar telemetria por multicast
+			if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
+			{
+				perror("send");
+				close(new_fd);
+				exit(0);
+			}
+
+		}
+		close(new_fd);
 	}
-	close(new_fd);
 
 	return 0;
 }

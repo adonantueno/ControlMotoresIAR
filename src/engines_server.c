@@ -557,9 +557,11 @@ int main(void)
 		//Llamado a funcion que verifica el payload		
 		//manda comando recibido, tipo de msj y file descriptor para
 		//comunicacion con arduino
-
-		if (verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos) < 0)
-			continue;
+		if (numbytes > 0)
+			if (verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos) < 0)
+				continue;
+		else if (numbytes < 0)
+			break;
 		
 		//Debo enviar telemetria por multicast
 		//	if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)

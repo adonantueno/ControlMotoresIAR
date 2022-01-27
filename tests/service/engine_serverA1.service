@@ -1,0 +1,10 @@
+[Unit]
+Description=Motores Antena 1 del IAR
+
+[Service]
+User=operador
+Group=users
+ExecStart=/usr/local/bin/engines_server
+
+[Install]
+WantedBy=multi-user.target

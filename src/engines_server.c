@@ -95,7 +95,7 @@ void *get_in_addr(struct sockaddr *sa)
 
 //void verificarPayload(uint8_t * comando, struct Command * comandos){
 
-void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *validos){
+int verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *validos){
 	int cmdValido = 0;
 	uint8_t cmdIngenieria = 0;
 	printf("El comando recibido es: %hhx \n", *comando);
@@ -125,6 +125,7 @@ void verificarPayload(uint8_t * comando, uint8_t * typeMsg, int fd, comandos *va
 	}
 	if (cmdValido == 0)
 		printf("El comando solicitado no existe");
+		return -1;
 }	
 		
 
@@ -557,7 +558,8 @@ int main(void)
 		//manda comando recibido, tipo de msj y file descriptor para
 		//comunicacion con arduino
 
-		verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
+		if (verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos) < 0)
+			continue;
 		
 		//Debo enviar telemetria por multicast
 		//	if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)

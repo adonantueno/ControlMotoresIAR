@@ -559,8 +559,8 @@ int main(void)
 
 		if (numbytes > 0)
 			verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
-		else if (numbytes == 0)
-			break;
+		//else if (numbytes == 0)
+		//	break;
 
 		//Debo enviar telemetria por multicast
 		//	if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)

@@ -557,11 +557,8 @@ int main(void)
 		//manda comando recibido, tipo de msj y file descriptor para
 		//comunicacion con arduino
 
-		if (numbytes > 0)
-			verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
-		//else if (numbytes == 0)
-		//	break;
-
+		verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos);
+		
 		//Debo enviar telemetria por multicast
 		//	if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)
 		//	{

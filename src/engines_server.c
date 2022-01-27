@@ -12,6 +12,8 @@
 #include <signal.h>
 #include <termios.h>
 #include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
 
 #include <iar_engines.h>
 
@@ -464,6 +466,7 @@ int main(void)
 	uint8_t tipoMensaje;
 	//int cmdValido = 0;
 	struct SAO_data_transport sao_packet, sao_packet_net;
+	struct pollfd pfd;
 
 	//Estructura utilizada para parsear los mensajes recibidos
 	union control
@@ -536,32 +539,37 @@ int main(void)
 			exit(-1);
 		}
 
+		pfd.fd = new_fd;
+		//pfd.events = POLLIN | POLLHUP | POLLRDNORM;
+		pfd.events = POLLIN | POLLHUP;
+		pfd.revents = 0;
+
 		inet_ntop(their_addr.ss_family,
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
 		while(1) {
-			if ((numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport))) == -1))
+			if (pfd.revents != POLLHUP)
 			{
-				perror("recv");
-				exit(1);
+				numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport)));
+				if (numbytes == 0)
+					break;
 			}
-			
-			printf("Bytes recibidos %d \n", numbytes);
+			if (numbytes > 0)
+			{
+				printf("Bytes recibidos %d \n", numbytes);
 		
-		//Asignacion de variables para lookup table
-			comandoRecibido = recibe.paquete.payload.data;
-			tipoMensaje = recibe.paquete.hdr.message_type;
+				//Asignacion de variables para lookup table
+				comandoRecibido = recibe.paquete.payload.data;
+				tipoMensaje = recibe.paquete.hdr.message_type;
 
-		//Llamado a funcion que verifica el payload		
-		//manda comando recibido, tipo de msj y file descriptor para
-		//comunicacion con arduino
-		if (numbytes > 0)
-			if (verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos) < 0)
-				continue;
-		else if (numbytes < 0)
-			break;
+				//Llamado a funcion que verifica el payload		
+				//manda comando recibido, tipo de msj y file descriptor para
+				//comunicacion con arduino
+				if (verificarPayload(&comandoRecibido, &tipoMensaje, fd, comandosValidos) < 0)
+					continue;
+			}
 		
 		//Debo enviar telemetria por multicast
 		//	if (write(new_fd, "telemetria", sizeof("telemetria")) == -1)

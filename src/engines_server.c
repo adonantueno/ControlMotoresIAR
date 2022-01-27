@@ -544,7 +544,7 @@ int main(void)
 			if ((numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport))) == -1))
 			{
 				perror("recv");
-				exit(1);
+				//exit(1);
 			}
 			
 			printf("Bytes recibidos %d \n", numbytes);

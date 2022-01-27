@@ -532,7 +532,7 @@ int main(void)
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
 		if (new_fd == -1) {
 			perror("accept");
-			exit(-1);
+			//exit(-1);
 		}
 
 		inet_ntop(their_addr.ss_family,
@@ -544,7 +544,7 @@ int main(void)
 			if ((numbytes = read(new_fd, &recibe.data, (sizeof (struct SAO_data_transport))) == -1))
 			{
 				perror("recv");
-				//exit(1);
+				exit(1);
 			}
 			
 			printf("Bytes recibidos %d \n", numbytes);
